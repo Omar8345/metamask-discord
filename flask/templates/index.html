@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>MetaMask Connection</title>
+    </head>
+    <body>
+        <center>
+        <h1>Connect Your MetaMask Wallet Here To Connect With Discord!</h1>
+        <button id="connectWallet" onclick="">Connect Wallet</button>
+        <button id="syncDiscord" onclick="">Sync Discord</button>
+
+        <p id="walletAddress"></p>
+
+        <script type="text/javascript">
+            var discordId = "{{ discordId }}";
+            window.walletAddress = null
+            const syncDiscord = document.getElementById('syncDiscord');
+            const connectWallet = document.getElementById('connectWallet')
+            const walletAddress = document.getElementById('walletAddress')
+
+
+            function checkInstalled() {
+                if (typeof window.ethereum == 'undefined') {
+                    walletAddress.innerText = 'Please install MetaMask to continue.'
+                    return false
+                }
+                connectWallet.addEventListener('click', connectWalletwithMetaMask)
+            }
+
+            async function connectWalletwithMetaMask() {
+                const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' })
+                .catch((e) => {
+                    console.error(e.message)
+                    return
+                })
+                if (!accounts) { return }
+
+                window.walletAddress = accounts[0]
+                walletAddress.innerText = window.walletAddress
+                
+
+                connectWallet.innerText = 'Sign Out'
+                connectWallet.removeEventListener('click', connectWalletwithMetaMask)
+                setTimeout(() => {
+                    connectWallet.addEventListener('click', signOutOfMetaMask)
+                    syncDiscord.addEventListener('click', syncDiscordWithWallet)
+                }, 200 )
+            }
+
+            function signOutOfMetaMask() {
+                window.walletAddress = null
+                walletAddress.innerText = ''
+                connectWallet.innerText = 'Connect Wallet'
+                
+                connectWallet.removeEventListener('click', signOutOfMetaMask)
+                syncDiscord.removeEventListener('click', syncDiscordWithWallet)
+
+                setTimeout(() => {
+                    connectWallet.addEventListener('click', connectWalletwithMetaMask)
+                }, 200 )
+            }
+
+            window.addEventListener('DOMContentLoaded', () => {
+                checkInstalled()
+            })
+
+            async function syncDiscordWithWallet() {
+                alert("If the wallet is already in the system, nothing would happen, if not, it would add it to the bot system.")
+                const response = await fetch('/sync', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        walletAddress: window.walletAddress,
+                        discordId: discordId
+                    })
+                })
+            }
+
+        </script>
+        </center>   
+    </body>
+</html>
